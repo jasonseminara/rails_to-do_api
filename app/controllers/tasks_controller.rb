@@ -15,17 +15,19 @@ class TasksController < ApplicationController
   def update
     task = Task.find_by_id(params[:id])
     task.update(permitted_params)
+    head :no_content
   end
 
   def destroy
     Task.find_by_id(params[:id]).delete
+    head :no_content
   end
 
   def toggle
     task = Task.find_by_id(params[:id])
     task[params[:field]] = !task[params[:field]]
     task.save
-
+    head :no_content
   end
 
   private
