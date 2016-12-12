@@ -23,7 +23,7 @@ default: &default
 
 development:
   <<: *default
-  database: react_to-do_rails_development
+  database: todo_dev
 
   # The specified database role being used to connect to postgres.
   # To create additional roles in postgres see `$ createuser --help`.
@@ -57,7 +57,7 @@ development:
 # Do not set this db to the same as development or production.
 test:
   <<: *default
-  database: react_to-do_rails_test
+  database: todo_test
 
 # As with config/secrets.yml, you never want to store sensitive information,
 # like your database password, in your source code. If your source code is
@@ -80,6 +80,6 @@ test:
 #
 production:
   <<: *default
-  database: react_to-do_rails_production
+  database: todo
   username: react_to-do_rails
   password: <%= ENV['REACT_TO-DO_RAILS_DATABASE_PASSWORD'] %>
