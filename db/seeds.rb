@@ -8,12 +8,15 @@
 
 1.upto(6) do |i|
   @user = User.create full_name:"User Nr#{i}",
+    email:Faker::Internet.email,
+    fname:Faker::Name.first_name,
+    lname:Faker::Name.last_name,
     password_digest: BCrypt::Password.create('password'),
     token: SecureRandom.base58(24)
   @user.save
   1.upto(25) do |n|
-    @user.tasks.create! name:"Example title #{i}/#{n}",
-      description:"Example content #{i}/#{n}",
+    @user.tasks.create! name:Faker::Space.constellation,
+      description:Faker::Lorem.sentence,
       completed:[true, false].sample,
       deleted:[true, false].sample
   end
