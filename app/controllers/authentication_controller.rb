@@ -12,12 +12,12 @@ class AuthenticationController < ApplicationController
   private
 
   def payload(user)
-    return nil unless user and user.id
+    return nil unless user&.token
     { auth_token: JsonWebToken.encode({
         u_id: user.token,
         iat: Time.new,
         nbf: Time.new,
-        exp: 12.hours.from_now,
+        exp: Time.now.to_i + 4 * 3600,
         sub: 'userAuth'
       })
     }

@@ -1,14 +1,17 @@
 class TasksController < ApplicationController
   before_action :check_header, :authenticate_request!
-  before_action :getTask, only: [:show, :update, :destroy, :toggle]
+  before_action :get_task, only: [:show, :update, :destroy, :toggle]
 
   def index
     render json: @current_user.tasks
   end
 
   def create
-    @current_user.tasks << Task.new(permitted_params)
+    newTask = Task.new(permitted_params)
+    debugger
+    @current_user.tasks << newTask
     @current_user.save
+    head :created, location: newTask
   end
 
   def show
@@ -26,17 +29,16 @@ class TasksController < ApplicationController
   end
 
   def toggle
-    head :bad_request unless validField?
-    @task[params[:field]] = !@task[params[:field]]
-    @task.save
+    head :bad_request unless valid_field?
+    @task.toggle! params[:field]
     head :no_content
   end
 
   private
 
   # we'll be super strict here and throw a 404 if we can't find a resource.
-  def getTask
-    @task = @current_user.tasks.find_by_id(params[:id])
+  def get_task
+    @task = @current_user.tasks.find(params[:id])
     head 404 and return unless @task
   end
 
@@ -44,7 +46,7 @@ class TasksController < ApplicationController
     params.require(:task).permit(:name, :description)
   end
 
-  def validField?
+  def valid_field?
     params.include?(:field) && :field.to_s === 'field' && ['completed','deleted'].include?(params[:field])
   end
 

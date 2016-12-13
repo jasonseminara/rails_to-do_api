@@ -9,8 +9,10 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
     origins 'localhost:3001'
 
+    # added 'expose: Location' since we're going to need Location in the front-end
     resource '*',
       headers: :any,
+      expose: ['Location'],
       methods: [:get, :post, :put, :patch, :delete, :options, :head]
   end
 end

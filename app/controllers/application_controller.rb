@@ -5,13 +5,11 @@ class ApplicationController < ActionController::API
   protected
   def authenticate_request!
 
-    unless user_id_in_token? || valid_token_timeframe?
-      render json: { errors: ['Not Authenticated'] }, status: :unauthorized
-      return
-    end
-    @current_user = User.find_by(token: auth_token[0]['u_id'])
-    rescue JWT::VerificationError, JWT::DecodeError
-    render json: { errors: ['Not Authenticated'] }, status: :unauthorized
+    head :unauthorized and return unless valid_token? && auth_token[0]['u_id']
+    @current_user = User.find_by!(token: auth_token[0]['u_id'])
+
+  rescue JWT::VerificationError, JWT::DecodeError, ActiveRecord::RecordNotFound => e
+    head :unauthorized
   end
 
 
@@ -19,7 +17,7 @@ class ApplicationController < ActionController::API
   # Check to see if the client is using the right content_type (application/vnd.api+json)
   def check_header
     if ['POST','PUT','PATCH'].include? request.method
-      if request.content_type != "application/json"
+      if request.content_type != "application/vnd.api+json"
         head 406 and return
       end
     end
@@ -51,16 +49,10 @@ class ApplicationController < ActionController::API
     @auth_token ||= JsonWebToken.decode(http_token)
   end
 
-  def user_id_in_token?
-    http_token && auth_token && auth_token[0]['u_id']
+  def valid_token?
+    http_token && auth_token
   end
 
-  def valid_token_timeframe?
-    t = auth_token[0];
-    t['iat'] < Time.new &&
-    t['nbf'] < Time.new &&
-    t['exp'] > Time.new
-  end
 
   def render_error(resource, status)
     render json: resource, status: status, adapter: :json_api, serializer: ActiveModel::Serializer::ErrorSerializer
