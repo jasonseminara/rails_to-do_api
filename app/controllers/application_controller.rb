@@ -1,33 +1,35 @@
 class ApplicationController < ActionController::API
-  attr_reader :current_user
   before_action :check_header
+  attr_reader :current_user
 
   protected
   def authenticate_request!
-    unless user_id_in_token?
+
+    unless user_id_in_token? || valid_token_timeframe?
       render json: { errors: ['Not Authenticated'] }, status: :unauthorized
       return
     end
-    @current_user = User.find(auth_token[:user_id])
+    @current_user = User.find_by(token: auth_token[0]['u_id'])
     rescue JWT::VerificationError, JWT::DecodeError
     render json: { errors: ['Not Authenticated'] }, status: :unauthorized
   end
 
 
   private
+  # Check to see if the client is using the right content_type (application/vnd.api+json)
   def check_header
     if ['POST','PUT','PATCH'].include? request.method
-      if request.content_type != "application/vnd.api+json"
+      if request.content_type != "application/json"
         head 406 and return
       end
     end
   end
 
+  # Ruby 2.3.0 object-safe operator (&.)
+  # http://mitrev.net/ruby/2015/11/13/the-operator-in-ruby/
   def validate_type
-    if params['data'] && params['data']['type']
-      if params['data']['type'] == params[:controller]
-        return true
-      end
+    if params&.data&.type == params[:controller]
+      return true
     end
     head 409 and return
   end
@@ -40,9 +42,9 @@ class ApplicationController < ActionController::API
   end
 
   def http_token
-      @http_token ||= if request.headers['Authorization'].present?
-        request.headers['Authorization'].split(' ').last
-      end
+    @http_token ||= if request.headers['Authorization'].present?
+      request.headers['Authorization'].split(' ').last
+    end
   end
 
   def auth_token
@@ -50,7 +52,14 @@ class ApplicationController < ActionController::API
   end
 
   def user_id_in_token?
-    http_token && auth_token && auth_token[:user_id].to_i
+    http_token && auth_token && auth_token[0]['u_id']
+  end
+
+  def valid_token_timeframe?
+    t = auth_token[0];
+    t['iat'] < Time.new &&
+    t['nbf'] < Time.new &&
+    t['exp'] > Time.new
   end
 
   def render_error(resource, status)
