@@ -8,7 +8,6 @@ class TasksController < ApplicationController
 
   def create
     newTask = Task.new(permitted_params)
-    debugger
     @current_user.tasks << newTask
     @current_user.save
     head :created, location: newTask
@@ -20,7 +19,7 @@ class TasksController < ApplicationController
 
   def update
     @task.update permitted_params
-    head :no_content
+    head :no_content, location: @task
   end
 
   def destroy
@@ -31,7 +30,7 @@ class TasksController < ApplicationController
   def toggle
     head :bad_request unless valid_field?
     @task.toggle! params[:field]
-    head :no_content
+    head :no_content, location: @task
   end
 
   private

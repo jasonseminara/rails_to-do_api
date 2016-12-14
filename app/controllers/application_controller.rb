@@ -4,7 +4,6 @@ class ApplicationController < ActionController::API
 
   protected
   def authenticate_request!
-
     head :unauthorized and return unless valid_token? && auth_token[0]['u_id']
     @current_user = User.find_by!(token: auth_token[0]['u_id'])
 
